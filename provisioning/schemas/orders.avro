@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "namespace": "io.confluent.developer.avro",
+  "name": "Order",
+  "fields": [
+    {
+      "name": "number",
+      "type": "int"
+    },
+    {
+      "name": "amount",
+      "type": "double"
+    },
+    {
+      "name": "shipping_address",
+      "type": "string",
+      "confluent:tags": [ "PII" ]
+    }
+  ]
+}
