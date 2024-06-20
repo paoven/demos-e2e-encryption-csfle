@@ -142,11 +142,11 @@ resource "confluent_role_binding" "app-producer-developer-write" {
   crn_pattern = "${confluent_kafka_cluster.standard.rbac_crn}/kafka=${confluent_kafka_cluster.standard.id}/topic=${confluent_kafka_topic.orders.topic_name}"
 }
 
-#resource "confluent_role_binding" "app-producer-kek-developer-write" {
-#  principal   = "User:${confluent_service_account.csfle-app-producer.id}"
-#  role_name   = "DeveloperWrite"
-#  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
-#}
+resource "confluent_role_binding" "app-producer-kek-developer-write" {
+  principal   = "User:${confluent_service_account.csfle-app-producer.id}"
+  role_name   = "DeveloperWrite"
+  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
+}
 
 resource "confluent_role_binding" "app-producer-subject-developer-read" {
   principal   = "User:${confluent_service_account.csfle-app-producer.id}"
