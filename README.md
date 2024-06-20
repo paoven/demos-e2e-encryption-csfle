@@ -85,7 +85,7 @@ terraform apply # it will take some minute
 With the help of terraform outputs and variables interpolation we can print CLI commands ready to be executed:
 
 ```shell
-# open a new shell, frun from /provisioning folder
+# open a new shell, run from /provisioning folder
 terraform output resource-ids
 ```
 Copy and run the  "kafka-avro-console-producer ..." command line from the terraform output, when the prompt is ready paste one by one some payloads, eg.
