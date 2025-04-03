@@ -12,7 +12,7 @@ Clients need KMS credentials to retrieve the Master key and decrypt the DEKs, in
 * docker and docker-compose CLI tools
 * Confluent Cloud API-Key and API-Secret having OrgAdmin role
 * terraform CLI
-* Confluent Platform 7.6.1 https://docs.confluent.io/platform/current/installation/installing_cp/zip-tar.html as we rely on kafka-avro-console-consumer and kafka-avro-console-producer tools which are provided by the CP platform in this /bin folder
+* Confluent Platform  7.6.1 =< version <= CP 7.8.2 https://docs.confluent.io/platform/current/installation/installing_cp/zip-tar.html as we rely on kafka-avro-console-consumer and kafka-avro-console-producer tools which are provided by the CP platform in this /bin folder
 
 ## Goal
 
@@ -120,8 +120,9 @@ Observe that shipping_address field is unecrypted
 # open a new shell, run from /provisioning folder
 
 terraform output resource-ids
-export VAULT_ADDR='http://127.0.0.1:8200'
-export VAULT_TOKEN=root-token
+# eventually unset KMS variables if you run the consumer from the previous shell
+unset VAULT_ADDR 
+unset VAULT_TOKEN
 ```
 
 Copy and run the  "kafka-avro-console-consumer --group confluent_cli_consumer_encrypted_fields ..." command line from the terraform output
@@ -130,3 +131,7 @@ Observe that this time shipping_address fields are encrypted but the records are
 {"number":1,"amount":15.0,"shipping_address":"/J0jj76c71DkvSGNwCCLFo53VzFWarlGURpYDk40MkoDxgrvByprbS7ArzCKs1B1JP18Q69r0ucmYMahn3YfjSeQzAC6oMnH/PY="}
 ```
 
+## TODO
+* Fix terraform destroy as KEK deletion does not work. It depends on DEK created outbound by the producer
+* Try to crete DEK directly with terraform to solve point 1
+* It looks kafka-avro-console-producer from CP 7.9.0 is not producing
