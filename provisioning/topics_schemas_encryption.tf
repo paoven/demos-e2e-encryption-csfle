@@ -20,9 +20,9 @@ resource "confluent_api_key" "env-admin-schema-registry-api-key" {
   }
 
   managed_resource {
-    id          = confluent_schema_registry_cluster.advanced.id
-    api_version = confluent_schema_registry_cluster.advanced.api_version
-    kind        = confluent_schema_registry_cluster.advanced.kind
+    id          = data.confluent_schema_registry_cluster.advanced.id
+    api_version = data.confluent_schema_registry_cluster.advanced.api_version
+    kind        = data.confluent_schema_registry_cluster.advanced.kind
 
     environment {
       id = confluent_environment.csfle-demo-environment.id
@@ -46,9 +46,9 @@ resource "confluent_api_key" "env-admin-schema-registry-api-key" {
 resource "confluent_tag" "pii" {
   name        = "PII"
   description = "PII tag description"
-  rest_endpoint = confluent_schema_registry_cluster.advanced.rest_endpoint
+  rest_endpoint = data.confluent_schema_registry_cluster.advanced.rest_endpoint
   schema_registry_cluster {
-    id = confluent_schema_registry_cluster.advanced.id
+    id = data.confluent_schema_registry_cluster.advanced.id
   }
 
   credentials {
@@ -63,12 +63,13 @@ resource "confluent_schema_registry_kek" "hcvault_kek-rot1" {
   kms_key_id  = "http://127.0.0.1:8200/transit/keys/csfle" #var.hashicorp_kms_key_arn
   shared      = false
   hard_delete = true
+  
 
   schema_registry_cluster {
-    id = confluent_schema_registry_cluster.advanced.id
+    id = data.confluent_schema_registry_cluster.advanced.id
   }
 
-  rest_endpoint = confluent_schema_registry_cluster.advanced.rest_endpoint
+  rest_endpoint = data.confluent_schema_registry_cluster.advanced.rest_endpoint
 
   credentials {
     key    = confluent_api_key.env-admin-schema-registry-api-key.id
@@ -80,6 +81,35 @@ resource "confluent_schema_registry_kek" "hcvault_kek-rot1" {
   }
 }
 
+/*
+
+it looks like DEKs cannot be created without specifying encryptedKeyMaterial
+
+resource "confluent_schema_registry_dek" "hcvault_dek-rot1" {
+
+
+  schema_registry_cluster {
+    id = data.confluent_schema_registry_cluster.advanced.id
+  }
+
+  rest_endpoint = data.confluent_schema_registry_cluster.advanced.rest_endpoint
+
+  credentials {
+    key    = confluent_api_key.env-admin-schema-registry-api-key.id
+    secret = confluent_api_key.env-admin-schema-registry-api-key.secret
+  }
+
+  kek_name = confluent_schema_registry_kek.hcvault_kek-rot1.name
+  subject_name = confluent_schema.orders.subject_name
+  hard_delete = true
+  algorithm = "AES256_GCM"
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+*/
+
 resource "confluent_schema" "orders" {
   recreate_on_update = false
   hard_delete = true
@@ -87,9 +117,9 @@ resource "confluent_schema" "orders" {
     prevent_destroy = false
   }
 
-  rest_endpoint = confluent_schema_registry_cluster.advanced.rest_endpoint
+  rest_endpoint = data.confluent_schema_registry_cluster.advanced.rest_endpoint
   schema_registry_cluster {
-    id = confluent_schema_registry_cluster.advanced.id
+    id = data.confluent_schema_registry_cluster.advanced.id
   }
 
   credentials {

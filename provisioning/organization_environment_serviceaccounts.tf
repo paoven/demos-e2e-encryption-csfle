@@ -1,34 +1,31 @@
 resource "confluent_environment" "csfle-demo-environment" {
   display_name = "${var.resources_prefix}csfle-demo"
+
+  stream_governance {
+    package = "ADVANCED"
+  }
 }
 
-# Stream Governance and Kafka clusters can be in different regions as well as different cloud providers,
-# but you should to place both in the same cloud and region to restrict the fault isolation boundary.
-data "confluent_schema_registry_region" "advanced" {
-  cloud   = var.confluent_csp
-  region  = var.confluent_csp_region
-  package = "ADVANCED" // CSFLE requires ADVANCED Schema Governance package
-}
-
-resource "confluent_schema_registry_cluster" "advanced" {
-  package = data.confluent_schema_registry_region.advanced.package
+data  "confluent_schema_registry_cluster" "advanced" {
+ 
 
   environment {
     id = confluent_environment.csfle-demo-environment.id
   }
 
-  region {
-    # See https://docs.confluent.io/cloud/current/stream-governance/packages.html#stream-governance-regions
-    id = data.confluent_schema_registry_region.advanced.id
-  }
+  depends_on = [
+    confluent_kafka_cluster.standard
+  ]
+
 }
+
 # Update the config to use a cloud provider and region of your choice.
 # https://registry.terraform.io/providers/confluentinc/confluent/latest/docs/resources/confluent_kafka_cluster
 resource "confluent_kafka_cluster" "standard" {
   display_name = "inventory"
   availability = "SINGLE_ZONE"
-  cloud        = data.confluent_schema_registry_region.advanced.cloud
-  region       = data.confluent_schema_registry_region.advanced.region
+  cloud        = var.confluent_csp
+  region       = var.confluent_csp_region
   standard {}
   environment {
     id = confluent_environment.csfle-demo-environment.id
@@ -145,13 +142,13 @@ resource "confluent_role_binding" "app-producer-developer-write" {
 resource "confluent_role_binding" "app-producer-kek-developer-write" {
   principal   = "User:${confluent_service_account.csfle-app-producer.id}"
   role_name   = "DeveloperWrite"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
 }
 
 resource "confluent_role_binding" "app-producer-subject-developer-read" {
   principal   = "User:${confluent_service_account.csfle-app-producer.id}"
   role_name   = "DeveloperWrite"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
 }
 
 resource "confluent_api_key" "app-producer-kafka-api-key" {
@@ -185,9 +182,9 @@ resource "confluent_api_key" "app-producer-schema-registry-api-key" {
   }
 
   managed_resource {
-    id          = confluent_schema_registry_cluster.advanced.id
-    api_version = confluent_schema_registry_cluster.advanced.api_version
-    kind        = confluent_schema_registry_cluster.advanced.kind
+    id          = data.confluent_schema_registry_cluster.advanced.id
+    api_version = data.confluent_schema_registry_cluster.advanced.api_version
+    kind        = data.confluent_schema_registry_cluster.advanced.kind
 
     environment {
       id = confluent_environment.csfle-demo-environment.id
@@ -216,13 +213,13 @@ resource "confluent_role_binding" "csfle-app-consumer-decrypted-developer-read-f
 resource "confluent_role_binding" "csfle-app-consumer-decrypted-developer-read-from-kek" {
   principal   = "User:${confluent_service_account.csfle-app-consumer-decrypted.id}"
   role_name   = "DeveloperRead"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
 }
 
 resource "confluent_role_binding" "csfle-app-consumer-decrypted-subject-developer-read" {
   principal   = "User:${confluent_service_account.csfle-app-consumer-decrypted.id}"
   role_name   = "DeveloperRead"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
 }
 
 resource "confluent_api_key" "csfle-app-consumer-decrypted-schema-registry-api-key" {
@@ -235,9 +232,9 @@ resource "confluent_api_key" "csfle-app-consumer-decrypted-schema-registry-api-k
   }
 
   managed_resource {
-    id          = confluent_schema_registry_cluster.advanced.id
-    api_version = confluent_schema_registry_cluster.advanced.api_version
-    kind        = confluent_schema_registry_cluster.advanced.kind
+    id          = data.confluent_schema_registry_cluster.advanced.id
+    api_version = data.confluent_schema_registry_cluster.advanced.api_version
+    kind        = data.confluent_schema_registry_cluster.advanced.kind
 
     environment {
       id = confluent_environment.csfle-demo-environment.id
@@ -267,13 +264,13 @@ resource "confluent_role_binding" "csfle-app-consumer-encrypted-developer-read-f
 resource "confluent_role_binding" "csfle-app-consumer-encrypted-developer-read-from-kek" {
   principal   = "User:${confluent_service_account.csfle-app-consumer-encrypted.id}"
   role_name   = "DeveloperRead"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/kek=${confluent_schema_registry_kek.hcvault_kek-rot1.name}"
 }
 
 resource "confluent_role_binding" "csfle-app-consumer-encrypted-subject-developer-read" {
   principal   = "User:${confluent_service_account.csfle-app-consumer-encrypted.id}"
   role_name   = "DeveloperRead"
-  crn_pattern = "${confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
+  crn_pattern = "${data.confluent_schema_registry_cluster.advanced.resource_name}/subject=${confluent_schema.orders.subject_name}"
 }
 
 resource "confluent_api_key" "csfle-app-consumer-encrypted-schema-registry-api-key" {
@@ -286,9 +283,9 @@ resource "confluent_api_key" "csfle-app-consumer-encrypted-schema-registry-api-k
   }
 
   managed_resource {
-    id          = confluent_schema_registry_cluster.advanced.id
-    api_version = confluent_schema_registry_cluster.advanced.api_version
-    kind        = confluent_schema_registry_cluster.advanced.kind
+    id          = data.confluent_schema_registry_cluster.advanced.id
+    api_version = data.confluent_schema_registry_cluster.advanced.api_version
+    kind        = data.confluent_schema_registry_cluster.advanced.kind
 
     environment {
       id = confluent_environment.csfle-demo-environment.id
