@@ -3,7 +3,7 @@
 This repository provides a quick way to provision and experiment with [Client-Side Field Level Encryption](https://docs.confluent.io/cloud/current/clusters/csfle/overview.html)(CSFLE) feature .
 
 This example implements the CSFLE not shared Master Key flow. In this scenario the Schema Registry has not access to the KMS. 
-Clients need KMS credentials to retrieve the Master key and decrypt the DEKs, in fact the DEK Registry will make the encrypted DEK available to authorized clients
+Clients need KMS credentials to access the Master key and decrypt the DEKs through KMS services/API, in fact the DEK Registry will make the encrypted DEK available to authorized clients. The Master Key never leaves the KMS.
 
 ![](images/non-shared-KMS.png).
 
