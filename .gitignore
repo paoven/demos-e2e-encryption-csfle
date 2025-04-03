@@ -28,3 +28,6 @@ replay_pid*
 *.idea
 
 provisioning/.terraform/
+provisioning/.env
+provisioning/.terraform.lock.hcl
+provisioning/terraform.tfstate.backup
